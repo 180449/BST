@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST CRUD Operations</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: rgb(243, 240, 230); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .card { 
+            background-color: rgb(255, 255, 255); 
+            padding: 25px 30px; 
+            border-radius: 12px; 
+            width: 500px; 
+            box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 10px; 
+        }
+        .title { 
+            display: flex; 
+            align-items: center; 
+            color: rgb(211, 47, 47); 
+            font-size: 26px; 
+            font-weight: bold; 
+            margin-bottom: 20px; 
+        }
+        .title span { 
+            background-color: rgb(248, 202, 202); 
+            color: rgb(211, 47, 47); 
+            border-radius: 50%; 
+            padding: 8px 12px; 
+            margin-right: 10px; 
+            font-size: 18px; 
+        }
+        .input-section { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        .full-width { grid-column: span 2; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        button { 
+            padding: 10px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            color: white; 
+            transition: background 0.2s; 
+        }
+        .btn-insert { background-color: rgb(46, 125, 50); }
+        .btn-search { background-color: #1976d2; }
+        .btn-update { background-color: #ffa000; }
+        .btn-delete { background-color: #d32f2f; }
+        button:hover { opacity: 0.9; }
+        .display-label { color: rgb(46, 125, 50); font-weight: bold; margin-top: 15px; display: block; }
+        #output { 
+            background: #f9f9f9; 
+            border: 1px solid #eee; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-top: 5px; 
+            min-height: 20px; 
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="title"><span>&lt;/&gt;</span> BST CRUD Exercise</div>
+    
+    <div class="input-section">
+        <input type="number" id="val" class="full-width" placeholder="Target Value">
+        <input type="number" id="newVal" class="full-width" placeholder="New Value (Update Only)">
+        
+        <div class="btn-group full-width">
+            <button class="btn-insert" onclick="doInsert()">Insert (C)</button>
+            <button class="btn-search" onclick="doSearch()">Search (R)</button>
+            <button class="btn-update" onclick="doUpdate()">Update (U)</button>
+            <button class="btn-delete" onclick="doDelete()">Delete (D)</button>
+        </div>
+    </div>
+
+    <span class="display-label">In-Order Traversal:</span>
+    <div id="output">Tree is empty</div>
+    <div id="status" style="margin-top: 10px; font-size: 14px; color: #666;"></div>
+</div>
+
+<script>
+    class Node {
+        constructor(val) {
+            this.val = val;
+            this.left = null;
+            this.right = null;
+        }
+    }
+
+    class BST {
+        constructor() { this.root = null; }
+
+        // CREATE
+        insert(val) {
+            const newNode = new Node(val);
+            if (!this.root) { this.root = newNode; return; }
+            let curr = this.root;
+            while (true) {
+                if (val === curr.val) return;
+                if (val < curr.val) {
+                    if (!curr.left) { curr.left = newNode; break; }
+                    curr = curr.left;
+                } else {
+                    if (!curr.right) { curr.right = newNode; break; }
+                    curr = curr.right;
+                }
+            }
+        }
+
+        // READ
+        search(val) {
+            let curr = this.root;
+            while (curr) {
+                if (val === curr.val) return true;
+                curr = val < curr.val ? curr.left : curr.right;
+            }
+            return false;
+        }
+
+        // DELETE
+        remove(val) {
+            this.root = this._removeNode(this.root, val);
+        }
+
+        _removeNode(node, val) {
+            if (!node) return null;
+            if (val < node.val) node.left = this._removeNode(node.left, val);
+            else if (val > node.val) node.right = this._removeNode(node.right, val);
+            else {
+                if (!node.left) return node.right;
+                if (!node.right) return node.left;
+                let temp = this._min(node.right);
+                node.val = temp.val;
+                node.right = this._removeNode(node.right, temp.val);
+            }
+            return node;
+        }
+
+        _min(node) {
+            while (node.left) node = node.left;
+            return node;
+        }
+
+        getInOrder(node, arr = []) {
+            if (node) {
+                this.getInOrder(node.left, arr);
+                arr.push(node.val);
+                this.getInOrder(node.right, arr);
+            }
+            return arr;
+        }
+    }
+
+    const tree = new BST();
+
+    function ui(msg = "") {
+        const res = tree.getInOrder(tree.root);
+        document.getElementById('output').innerText = res.length ? res.join(" → ") : "Tree is empty";
+        document.getElementById('status').innerText = msg;
+    }
+
+    function doInsert() {
+        const v = parseInt(document.getElementById('val').value);
+        if (isNaN(v)) return;
+        tree.insert(v);
+        ui(`Inserted: ${v}`);
+    }
+
+    function doSearch() {
+        const v = parseInt(document.getElementById('val').value);
+        if (isNaN(v)) return;
+        ui(tree.search(v) ? `Found: ${v}` : `Not Found: ${v}`);
+    }
+
+    function doUpdate() {
+        const oldV = parseInt(document.getElementById('val').value);
+        const newV = parseInt(document.getElementById('newVal').value);
+        if (isNaN(oldV) || isNaN(newV)) return;
+        if (tree.search(oldV)) {
+            tree.remove(oldV);
+            tree.insert(newV);
+            ui(`Updated ${oldV} to ${newV}`);
+        } else {
+            ui(`Error: ${oldV} not found`);
+        }
+    }
+
+    function doDelete() {
+        const v = parseInt(document.getElementById('val').value);
+        if (isNaN(v)) return;
+        tree.remove(v);
+        ui(`Deleted: ${v}`);
+    }
+</script>
+
+</body>
+</html>
